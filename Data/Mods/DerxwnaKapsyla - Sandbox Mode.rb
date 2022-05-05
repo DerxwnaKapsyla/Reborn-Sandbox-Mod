@@ -6,7 +6,7 @@
 # This makes it episode-agnostic, but requires one additional step when editing the map
 # (it needs to be renamed Map-05 after it has been saved and compiled)
 
-SANDBOX_ACCESS_FROM_ANYWHERE = false
+SANDBOX_ACCESS_FROM_ANYWHERE = true
 SANDBOX_MAPID = -5
 SANDBOX_METADATA_MAPID = 38 # Copy the Grand Hall's metadata for the Sandbox zone
 SANDBOX_MAX_SPECIES = 807 # PBSpecies.maxValue
@@ -15,7 +15,7 @@ SANDBOX_MAX_SPECIES = 807 # PBSpecies.maxValue
 #  Things that need to be checked between episodes  #
 #####################################################
 
-#Metadata
+# Metadata
 if !defined?(sandbox_oldPbGetMetadata)
   alias :sandbox_oldPbGetMetadata :pbGetMetadata
 end
@@ -35,6 +35,19 @@ class Cache_Game
 end
 
 # Sandbox access and money
+class PokemonMapMetadata
+  attr_accessor :sandbox_returnPoint
+  def sandbox_saveReturnPoint(returnPoint)
+    # Kernel.pbMessage(returnPoint.join(', '))
+    @sandbox_returnPoint=returnPoint
+  end
+  def sandbox_getReturnPoint(item=nil)
+    # Kernel.pbMessage(@sandbox_returnPoint.join(', '))
+    return @sandbox_returnPoint if !item
+    return @sandbox_returnPoint[0] if item == 'mapid'
+    raise ArgumentError.new("ERROR:: sandbox_getReturnPoint:: unrecognized item \"#{item}\"")
+  end
+end
 module PokemonPCList
   if !defined?(self.sandbox_oldCallCommand)
     class <<self
@@ -56,7 +69,7 @@ class Sandbox_ManageAccess
     # Structure: Greeting line, Access X, Access Y
     return [_INTL('Please follow the yellow line.'), 7, 4] if mapId==38 # Grand Hall
     return [_INTL('Initiating warp procedure.'), 52, 44] if mapId==355 # Agate Circus
-    return [_INTL('Please follow the yellow line.'), 7, 4] if SANDBOX_ACCESS_FROM_ANYWHERE && mapId!=SANDBOX_MAPID
+    return [_INTL('Initiating warp procedure.'), 7, 4] if SANDBOX_ACCESS_FROM_ANYWHERE && mapId!=SANDBOX_MAPID
     return nil
   end
   def shouldShow?
@@ -70,6 +83,7 @@ class Sandbox_ManageAccess
     $sandbox_overridePcLogoff=true
     accessData=getAccessPointData
     Kernel.pbMessage(accessData[0])
+    $PokemonMap.sandbox_saveReturnPoint([$game_map.map_id,$game_player.x,$game_player.y,$game_player.direction])
     # Setup map & Transfer player
     # mapSandbox=Game_Map.new
     # mapSandbox.setup(SANDBOX_MAPID)
@@ -100,8 +114,36 @@ class Sandbox_GiveMoney
     $Trainer.money = Kernel.pbMessageChooseNumber(_INTL('How much do you want to end up with? You currently have ${1}', $Trainer.money), params)
   end
 end
+class Sandbox_ExitSandbox
+  def shouldShow?
+    return $game_map.map_id == SANDBOX_MAPID
+  end
+  def name
+    mapid=$PokemonMap.sandbox_getReturnPoint('mapid')
+    return _INTL('Return to {1}', pbGetMapNameFromId(mapid))
+  end
+  def access
+    $sandbox_overridePcLogoff=true
+    Kernel.pbMessage(_INTL('Initiating warp procedure.'))
+    # Setup map & Transfer player
+    # mapTarget=Game_Map.new
+    # mapTarget.setup($PokemonMap.sandbox_getReturnPoint('mapid'))
+    mapTarget=$PokemonMap.sandbox_getReturnPoint()
+    pbFadeOutIn(99999){
+      Kernel.pbCancelVehicles
+      # $game_switches[:Starting_Over]=true
+      $game_temp.player_new_map_id=mapTarget[0]
+      $game_temp.player_new_x=mapTarget[1]
+      $game_temp.player_new_y=mapTarget[2]
+      $game_temp.player_new_direction=mapTarget[3]
+      $scene.transfer_player if $scene.is_a?(Scene_Map)
+      $game_map.refresh
+    }
+  end
+end
 PokemonPCList.registerPC(Sandbox_ManageAccess.new)
 PokemonPCList.registerPC(Sandbox_GiveMoney.new)
+PokemonPCList.registerPC(Sandbox_ExitSandbox.new)
 
 # From Sandbox E17; the sandbox actually comments out the option in the PokeGear, but doing this instead should ensure compatibility with SWM
 class Scene_Pokegear

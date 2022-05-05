@@ -9,7 +9,8 @@ fi
 releases_folder='Releases'
 filename="${releases_folder}/Sandbox_E19_v$(cat 'VERSION').zip"
 included_items=(
-  'Data/'
+  'Data/Mods/'
+  'Data/Map-05.rxdata'
   'Graphics/'
   'README.md'
   'Pokemon Reborn_ Sandbox Mode - Guide.xlsx'
