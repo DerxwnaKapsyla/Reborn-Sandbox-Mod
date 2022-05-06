@@ -331,6 +331,7 @@ end
 def Sandbox_getPkmnForm(species, speciesName)
   if Sandbox_isAlternateFormsPackInstalled?
     # Alternate forms pack installed: unleash the horde!
+    # Can also handle Aevian Misdreavus, with the only downside of renaming Alolan to Alternate
     formnames=Sandbox_getFormNames(species)
     return nil if formnames.length <= 1
     formnamesStrings = []
@@ -347,9 +348,11 @@ def Sandbox_getPkmnForm(species, speciesName)
 end
 
 def Sandbox_isAlternateFormsPackInstalled?
-  # Is this the alternate forms pack mod? Ask drapion!
-  formnames=Sandbox_getFormNames(getID(PBSpecies, :DRAPION))
-  return formnames.length > 1
+  # Can also handle Aevian Misdreavus, with the only downside of renaming Alolan to Alternate
+  return true
+  # # Is this the alternate forms pack mod? Ask drapion!
+  # formnames=Sandbox_getFormNames(getID(PBSpecies, :DRAPION))
+  # return formnames.length > 1
 end
 
 def Sandbox_getFormNames(speciesId)
@@ -359,12 +362,21 @@ def Sandbox_getFormNames(speciesId)
   else
     formnames=strsplit(formnames,/,/)
   end
+  hasAlolan=false
+  idAlternate=-1
   result=[]
   for i in 0...formnames.length
     name=formnames[i].strip
     next if name == ''
+    nameDowncase=name.downcase
+    hasAlolan=true if nameDowncase=='alolan'
+    idAlternate=i if nameDowncase=='alternate'
     result.push([name, i])
   end
+  if !hasAlolan && idAlternate >= 0
+    # In the base game Alolans are named Alternate
+    result[idAlternate][0]='Alolan'
+  end 
   return result
 end
 
