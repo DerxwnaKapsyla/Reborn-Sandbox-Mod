@@ -232,6 +232,8 @@ def Sandbox_getTrainerData(trainername)
     return 45, 212
   when 'Mori'
     return 186, 556
+  when 'Potentia'
+    return 129, 410
   end
   return nil, nil
 end
