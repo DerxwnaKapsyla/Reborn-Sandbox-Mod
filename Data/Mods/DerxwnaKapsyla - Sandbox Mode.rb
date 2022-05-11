@@ -163,80 +163,77 @@ if !getversion().start_with?(swm_target_version)
 end
 
 # Trainer battles
-if !defined?(sandbox_oldPbLoadTrainer)
-  alias :sandbox_oldPbLoadTrainer :pbLoadTrainer
-end
-def pbLoadTrainer(trainerid, trainername, partyid=0)
-  Sandbox_addTrainerData(trainerid, trainername, partyid)
-  return sandbox_oldPbLoadTrainer(trainerid, trainername, partyid)
-end
-
-def Sandbox_addTrainerData(trainerid, trainername, partyid)
-  trainerarray=$cache.trainers[trainerid]
-  trainer=trainerarray.dig(trainername,partyid)
-  return nil if trainer
-  # Missing; add it
-  species,move=Sandbox_getTrainerData(trainername)
-  return nil if !species
-  $cache.trainers[trainerid][trainername]={} if !$cache.trainers[trainerid][trainername]
-  $cache.trainers[trainerid][trainername][partyid]=[
-    Sandbox_getTrainerTeam(species, move), # Mons
-    []
+$lcmal_trainers={} if !defined?(lcmal_trainers)
+$lcmal_trainers['Potentia'] = {
+  :party => [
+    {
+      TPSPECIES => 129,
+      TPLEVEL => 1,
+      TPMOVE1 => 410
+    },
+    {
+      TPSPECIES => 31,
+      TPLEVEL => 1,
+      TPMOVE1 => 419
+    },
+    {
+      TPSPECIES => 34,
+      TPLEVEL => 1,
+      TPMOVE1 => 364
+    },
+    {
+      TPSPECIES => 62,
+      TPLEVEL => 1,
+      TPMOVE1 => 383
+    },
+    {
+      TPSPECIES => 189,
+      TPLEVEL => 1,
+      TPMOVE1 => 410
+    },
+    {
+      TPSPECIES => 45,
+      TPLEVEL => 1,
+      TPMOVE1 => 212
+    }
   ]
-end
-
-def Sandbox_getTrainerTeam(species, move)
-  retval=[]
-  for i in 0..5
-    monData=[]
-    monData[TPSPECIES]=species
-    monData[TPLEVEL]=1
-    monData[TPFORM]=0
-    monData[TPITEM]=0
-    monData[TPMOVE1]=move
-    monData[TPMOVE2]=0
-    monData[TPMOVE3]=0
-    monData[TPMOVE4]=0
-    monData[TPABILITY]=0
-    monData[TPGENDER]=0
-    monData[TPSHINY]=false
-    monData[TPNATURE]=0
-    monData[TPIV]=10
-    monData[TPHPEV]=0
-    monData[TPATKEV]=0
-    monData[TPDEFEV]=0
-    monData[TPSPEEV]=0
-    monData[TPSPAEV]=0
-    monData[TPSPDEV]=0
-    monData[TPHAPPINESS]=70
-    monData[TPNAME]=''
-    monData[TPSHADOW]=false
-    monData[TPBALL]=0
-    retval.push(monData)
-  end
-  return retval
-end
-
-def Sandbox_getTrainerData(trainername)
-  # returns [Species, Move]
-  case trainername
-  when 'Kenko'
-    return 31, 419
-  when 'Kogeki'
-    return 34, 364
-  when 'Boei'
-    return 62, 383
-  when 'Sokudo'
-    return 189, 410
-  when 'Chusho'
-    return 45, 212
-  when 'Mori'
-    return 186, 556
-  when 'Potentia'
-    return 129, 410
-  end
-  return nil, nil
-end
+}
+$lcmal_trainers['Kalypsa'] = {
+  :party => [
+    {
+      TPSPECIES => 571, # Zoroark
+      TPLEVEL => 100,
+      TPGENDER => 1 # F
+    },
+    {
+      TPSPECIES => 655, # Delphox
+      TPLEVEL => 100,
+      TPGENDER => 0 # M
+    },
+    {
+      TPSPECIES => 462, # Magnezone
+      TPLEVEL => 100
+    },
+    {
+      TPSPECIES => 773, # Silvally
+      TPLEVEL => 100,
+      TPITEM => 698 # Ice Memory
+    },
+    {
+      TPSPECIES => 452, # Drapion
+      TPLEVEL => 100,
+      TPGENDER => 0 # M
+    },
+    {
+      TPSPECIES => 208, # Steelix
+      TPLEVEL => 100,
+      TPITEM => 625 # Steelixite
+    }
+  ],
+  :items => [
+    566 # Mega-Z Ring
+  ]
+}
 
 #####################################################
 #              Other custom scripts                 #
