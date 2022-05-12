@@ -171,10 +171,10 @@ $lcmal_trainerClasses['WANDERER']={
   :battleBGM => "Magical Girl's Crusade.ogg",
   :winBGM => "Victory2",
   :sprites => {
-    :fullFigure => 'Data/Mods/libCommonModAssets/trainer400.png',
-    :overworld => 'Data/Mods/libCommonModAssets/trchar400.png',
-    :vsBar => 'Data/Mods/libCommonModAssets/vsBar400.png',
-    :vsTrainer => 'Data/Mods/libCommonModAssets/vsTrainer400.png'
+    :fullFigure => 'Data/Mods/libCommonModAssets/Sandbox_trainerXXX_Kalypsa.png',
+    :overworld => 'Data/Mods/libCommonModAssets/Sandbox_trcharXXX_Kalypsa.png',
+    :vsBar => 'Data/Mods/libCommonModAssets/Sandbox_vsBarXXX_Kalypsa.png',
+    :vsTrainer => 'Data/Mods/libCommonModAssets/Sandbox_vsTrainerXXX_Kalypsa.png'
   }
 }
 

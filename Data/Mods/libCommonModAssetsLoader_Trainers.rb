@@ -4,6 +4,10 @@
 ### (any of the values can be omitted, in which case the defaults will be used instead)
 ### ('Kenko' and 'Kogeki' in this example are the names of the trainers we are going to add)
 ###
+### Call a battle with a custom backdrop from an event:
+### lcmal_pbTrainerBattle(PBTrainers::WANDERER, 'Kenko', 'gg wp!', false, 0, false, 0, backdrop: 'Starlight')
+###
+### Code to be put in your mod:
 ### $lcmal_trainerClasses={} if !defined?(lcmal_trainerClasses)
 ### $lcmal_trainerClasses['WANDERER']={
 ###   :title => "Omniversal Wanderer",
@@ -218,4 +222,24 @@ class PBTrainers
     return message if message
     return pbGetMessage(MessageTypes::TrainerTypes,id)
   end
+end
+
+##################################
+# Backdrop
+
+def lcmal_pbTrainerBattle(*args, backdrop: nil, **kwargs)
+  $lcmal_enforcedBackDrop=backdrop if backdrop
+  result=pbTrainerBattle(*args, **kwargs)
+  $lcmal_enforcedBackDrop=nil
+  return result
+end
+
+if !defined?(lcmal_oldPbGetMetadata)
+  alias :lcmal_oldPbGetMetadata :pbGetMetadata
+end
+def pbGetMetadata(mapid, metadataType)
+  if metadataType == MetadataBattleBack && defined?($lcmal_enforcedBackDrop) && $lcmal_enforcedBackDrop
+    return $lcmal_enforcedBackDrop
+  end
+  return lcmal_oldPbGetMetadata(mapid, metadataType)
 end
