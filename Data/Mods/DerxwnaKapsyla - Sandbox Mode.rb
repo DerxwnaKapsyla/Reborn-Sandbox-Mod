@@ -7,7 +7,7 @@
 # (it needs to be renamed Map-05 after it has been saved and compiled)
 
 SANDBOX_ACCESS_FROM_ANYWHERE = true
-SANDBOX_MAPNAME = 'Sandbox'
+SANDBOX_MAPNAME = 'Sandbox Zone'
 SANDBOX_MAPID = -5
 SANDBOX_METADATA_MAPID = 38 # Copy the Grand Hall's metadata for the Sandbox zone
 SANDBOX_MAX_SPECIES = 807 # PBSpecies.maxValue
@@ -128,7 +128,7 @@ class Sandbox_GiveMoney
   end
   def access
     params=ChooseNumberParams.new
-    params.setRange(0, 999999)
+    params.setRange(0, 9999999)
     params.setDefaultValue($Trainer.money)
     $Trainer.money = Kernel.pbMessageChooseNumber(_INTL('How much do you want to end up with? You currently have ${1}', $Trainer.money), params)
   end
@@ -232,12 +232,17 @@ $lcmal_trainers['Potentia'] = {
     }
   ]
 }
-$lcmal_trainers['Kalypsa'] = {
+$lcmal_trainers['Kalypsa Kapsyla'] = {
   :party => [
     {
-      TPSPECIES => 571, # Zoroark
+      TPSPECIES => 452, # Drapion
       TPLEVEL => 100,
-      TPGENDER => 1 # F
+      TPGENDER => 0 # M
+    },
+    {
+      TPSPECIES => 208, # Steelix
+      TPLEVEL => 100,
+      TPITEM => 625 # Steelixite
     },
     {
       TPSPECIES => 655, # Delphox
@@ -249,23 +254,23 @@ $lcmal_trainers['Kalypsa'] = {
       TPLEVEL => 100
     },
     {
+      TPSPECIES => 571, # Zoroark
+	  TPFORM => 15, # Silvaly's Ice Form
+      TPLEVEL => 100,
+      TPGENDER => 1, # F
+	  TPSHINY => true
+    },
+    {
       TPSPECIES => 773, # Silvally
+	  TPFORM => 15, # Ice Form
       TPLEVEL => 100,
-      TPITEM => 698 # Ice Memory
-    },
-    {
-      TPSPECIES => 452, # Drapion
-      TPLEVEL => 100,
-      TPGENDER => 0 # M
-    },
-    {
-      TPSPECIES => 208, # Steelix
-      TPLEVEL => 100,
-      TPITEM => 625 # Steelixite
+      TPITEM => 698, # Ice Memory
+	  TPSHINY => true
     }
   ],
   :items => [
-    566 # Mega-Z Ring
+    221, # Full Restore
+	221  # Full Restore
   ]
 }
 
