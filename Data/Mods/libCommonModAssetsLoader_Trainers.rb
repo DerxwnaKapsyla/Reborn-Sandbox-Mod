@@ -227,8 +227,9 @@ end
 ##################################
 # Backdrop
 
+$lcmal_enforcedBackDrop=nil # Reset on reset
 def lcmal_pbTrainerBattle(*args, backdrop: nil, **kwargs)
-  $lcmal_enforcedBackDrop=backdrop if backdrop
+  $lcmal_enforcedBackDrop=backdrop
   result=pbTrainerBattle(*args, **kwargs)
   $lcmal_enforcedBackDrop=nil
   return result
