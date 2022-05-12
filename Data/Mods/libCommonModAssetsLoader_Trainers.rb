@@ -191,6 +191,8 @@ def lcmal_updateTrainerClassData(name, newVal, classData)
     return newVal
   end
   PBTrainers.const_set(name, newVal)
+  $lcmal_PBTrainersMessages={} if !defined?($lcmal_PBTrainersMessages)
+  $lcmal_PBTrainersMessages[newVal]=classData[:title] if classData[:title]
   # Update the cache
   $cache.trainers[newVal]={}
   $cache.trainertypes[newVal]=[
@@ -204,4 +206,16 @@ def lcmal_updateTrainerClassData(name, newVal, classData)
     0,
     classData[:skill]
   ]
+  # for i in 0...$cache.trainertypes[18].length
+  #   Kernel.pbMessage(_INTL('{1}||{2}', $cache.trainertypes[18][i], $cache.trainertypes[newVal][i]))
+  # end
+end
+
+class PBTrainers
+  def self.getName(id)
+    $lcmal_PBTrainersMessages={} if !defined?($lcmal_PBTrainersMessages)
+    message=$lcmal_PBTrainersMessages[id]
+    return message if message
+    return pbGetMessage(MessageTypes::TrainerTypes,id)
+  end
 end
