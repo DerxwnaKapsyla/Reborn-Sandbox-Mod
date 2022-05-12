@@ -7,6 +7,7 @@
 # (it needs to be renamed Map-05 after it has been saved and compiled)
 
 SANDBOX_ACCESS_FROM_ANYWHERE = true
+SANDBOX_MAPNAME = 'Sandbox'
 SANDBOX_MAPID = -5
 SANDBOX_METADATA_MAPID = 38 # Copy the Grand Hall's metadata for the Sandbox zone
 SANDBOX_MAX_SPECIES = 807 # PBSpecies.maxValue
@@ -31,6 +32,24 @@ class Cache_Game
     return sandbox_oldMapLoad(mapid) if mapid >= 0
     puts "loading map",mapid
     return load_data(sprintf("Data/Map%03d.rxdata", mapid))
+  end
+  if !defined?(sandbox_oldCacheMapInfos)
+    alias :sandbox_oldCacheMapInfos :cacheMapInfos
+  end
+  def cacheMapInfos(*args, **kwargs)
+    result=sandbox_oldCacheMapInfos(*args, **kwargs)
+    $cache.mapinfos[SANDBOX_MAPID]=$cache.mapinfos[SANDBOX_METADATA_MAPID].clone
+    $cache.mapinfos[SANDBOX_MAPID].name=SANDBOX_MAPNAME
+    return result
+  end
+end
+class Game_Map
+  if !defined?(sandbox_oldName)
+    alias :sandbox_oldName :name
+  end
+  def name(*args, **kwargs)
+    return SANDBOX_MAPNAME if self.map_id == SANDBOX_MAPID
+    return sandbox_oldName(*args, **kwargs)
   end
 end
 
