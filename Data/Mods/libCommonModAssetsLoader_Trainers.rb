@@ -130,6 +130,59 @@ def lcmal_ensureTrainerClass(name)
   classData=$lcmal_trainerClasses[name.to_s]
   return nil if !classData
   newVal=PBTrainers.getCount()
+  # Update the sprites
+  lcmal_updateTrainerClassSprites(newVal, classData[:sprites])
+  # Update the data
+  lcmal_updateTrainerClassData(name, newVal, classData)
+  # Fin
+  return newVal
+end
+
+def lcmal_updateTrainerClassSprites(newVal, spritesData)
+  lcmal_replace_file(spritesData[:vsBar], sprintf('Graphics/Transitions/vsBar%d',newVal))
+  lcmal_replace_file(spritesData[:vsTrainer], sprintf('Graphics/Transitions/vsTrainer%d',newVal))
+  lcmal_replace_file(spritesData[:fullFigure], sprintf('Graphics/Characters/trainer%d',newVal))
+  lcmal_replace_file(spritesData[:overworld], sprintf('Graphics/Characters/trchar%d',newVal))
+end
+
+def lcmal_replace_file(src, dest)
+  return nil if !src
+  $lcmal_fileMapping={} if !defined?($lcmal_fileMapping)
+  $lcmal_fileMapping[dest]=src
+  # File.open("#{dest}.png", 'w') { |f| f.write(File.read(src)) }
+end
+
+if !defined?(lcmal_oldPbResolveBitmap)
+  alias :lcmal_oldPbResolveBitmap :pbResolveBitmap
+end
+def pbResolveBitmap(x, *args, **kwargs)
+  $lcmal_fileMapping={} if !defined?($lcmal_fileMapping)
+  actual=$lcmal_fileMapping[x]
+  if actual
+    return self.lcmal_oldPbResolveBitmap(actual, *args, **kwargs)
+  end
+  return self.lcmal_oldPbResolveBitmap(x, *args, **kwargs)
+end
+
+module RPG
+  module Cache
+    if !defined?(self.lcmal_oldLoad_bitmap)
+      class <<self
+        alias_method :lcmal_oldLoad_bitmap, :load_bitmap
+      end
+    end
+    def self.load_bitmap(filename, *args, **kwargs)
+      $lcmal_fileMapping={} if !defined?($lcmal_fileMapping)
+      actual=$lcmal_fileMapping[filename]
+      if actual
+        return self.lcmal_oldLoad_bitmap(actual, *args, **kwargs)
+      end
+      return self.lcmal_oldLoad_bitmap(filename, *args, **kwargs)
+    end
+  end
+end
+
+def lcmal_updateTrainerClassData(name, newVal, classData)
   # Update PBTrainers
   PBTrainers.define_singleton_method(:getCount) do
     return newVal+1
@@ -140,7 +193,6 @@ def lcmal_ensureTrainerClass(name)
   PBTrainers.const_set(name, newVal)
   # Update the cache
   $cache.trainers[newVal]={}
-  # Update the data
   $cache.trainertypes[newVal]=[
     newVal, # ID
     name.to_s, # Name
@@ -152,17 +204,4 @@ def lcmal_ensureTrainerClass(name)
     0,
     classData[:skill]
   ]
-  # Update the sprites
-  spritesData=classData[:sprites]
-  lcmal_replace_file(spritesData[:fullFigure], sprintf('Graphics/Characters/trainer%d',newVal))
-  lcmal_replace_file(spritesData[:overworld], sprintf('Graphics/Characters/trchar%d',newVal))
-  lcmal_replace_file(spritesData[:vsBar], sprintf('Graphics/Transitions/vsBar%d',newVal))
-  lcmal_replace_file(spritesData[:vsTrainer], sprintf('Graphics/Transitions/vsTrainer%d',newVal))
-  # TODO wait for the write to complete
-  # Fin
-  return newVal
-end
-
-def lcmal_replace_file(src, dest)
-  File.open(dest, 'w') { |f| f.write(File.read(src)) }
 end
