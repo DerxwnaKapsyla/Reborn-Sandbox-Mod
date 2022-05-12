@@ -163,6 +163,21 @@ if !getversion().start_with?(swm_target_version)
 end
 
 # Trainer battles
+$lcmal_trainerClasses={} if !defined?(lcmal_trainerClasses)
+$lcmal_trainerClasses['WANDERER']={
+  :title => "Omniversal Wanderer",
+  :skill => 100,
+  :moneymult => 17,
+  :battleBGM => "Magical Girl's Crusade.ogg",
+  :winBGM => "Victory2",
+  :sprites => {
+    :fullFigure => 'Data/Mods/libCommonModAssets/trainer400.png',
+    :overworld => 'Data/Mods/libCommonModAssets/trchar400.png',
+    :vsBar => 'Data/Mods/libCommonModAssets/vsBar400.png',
+    :vsTrainer => 'Data/Mods/libCommonModAssets/vsTrainer400.png'
+  }
+}
+
 $lcmal_trainers={} if !defined?(lcmal_trainers)
 $lcmal_trainers['Potentia'] = {
   :party => [

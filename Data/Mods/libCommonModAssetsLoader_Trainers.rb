@@ -4,6 +4,21 @@
 ### (any of the values can be omitted, in which case the defaults will be used instead)
 ### ('Kenko' and 'Kogeki' in this example are the names of the trainers we are going to add)
 ###
+### $lcmal_trainerClasses={} if !defined?(lcmal_trainerClasses)
+### $lcmal_trainerClasses['WANDERER']={
+###   :title => "Omniversal Wanderer",
+###   :skill => 100,
+###   :moneymult => 17,
+###   :battleBGM => "Magical Girl's Crusade.ogg",
+###   :winBGM => "Victory2",
+###   :sprites => {
+###     :fullFigure => 'Data/Mods/libCommonModAssets/trainer400.png',
+###     :overworld => 'Data/Mods/libCommonModAssets/trchar400.png',
+###     :vsBar => 'Data/Mods/libCommonModAssets/vsBar400.png',
+###     :vsTrainer => 'Data/Mods/libCommonModAssets/vsTrainer400.png'
+###   }
+### }
+###
 ### $lcmal_trainers={} if !defined?(lcmal_trainers)
 ### $lcmal_trainers['Kenko'] = {
 ###   :party => [
@@ -100,4 +115,54 @@ end
 def lcmal_getTrainerItems(data)
   return [] if !data
   return data
+end
+
+###################################################
+# Classes
+
+def PBTrainers.const_missing(name)
+  newVal=lcmal_ensureTrainerClass(name)
+  return newVal
+end
+
+def lcmal_ensureTrainerClass(name)
+  return nil if !defined?($lcmal_trainerClasses)
+  classData=$lcmal_trainerClasses[name.to_s]
+  return nil if !classData
+  newVal=PBTrainers.getCount()
+  # Update PBTrainers
+  PBTrainers.define_singleton_method(:getCount) do
+    return newVal+1
+  end
+  PBTrainers.define_singleton_method(:maxValue) do
+    return newVal
+  end
+  PBTrainers.const_set(name, newVal)
+  # Update the cache
+  $cache.trainers[newVal]={}
+  # Update the data
+  $cache.trainertypes[newVal]=[
+    newVal, # ID
+    name.to_s, # Name
+    classData[:title],
+    classData[:moneymult],
+    classData[:battleBGM],
+    classData[:winBGM],
+    nil,
+    0,
+    classData[:skill]
+  ]
+  # Update the sprites
+  spritesData=classData[:sprites]
+  lcmal_replace_file(spritesData[:fullFigure], sprintf('Graphics/Characters/trainer%d',newVal))
+  lcmal_replace_file(spritesData[:overworld], sprintf('Graphics/Characters/trchar%d',newVal))
+  lcmal_replace_file(spritesData[:vsBar], sprintf('Graphics/Transitions/vsBar%d',newVal))
+  lcmal_replace_file(spritesData[:vsTrainer], sprintf('Graphics/Transitions/vsTrainer%d',newVal))
+  # TODO wait for the write to complete
+  # Fin
+  return newVal
+end
+
+def lcmal_replace_file(src, dest)
+  File.open(dest, 'w') { |f| f.write(File.read(src)) }
 end
