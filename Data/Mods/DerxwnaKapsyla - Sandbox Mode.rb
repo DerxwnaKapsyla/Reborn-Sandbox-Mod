@@ -232,7 +232,7 @@ $lcmal_trainers['Potentia'] = {
     }
   ]
 }
-$lcmal_trainers['Kalypsa Kapsyla'] = {
+$lcmal_trainers['Kalypsa'] = {
   :party => [
     {
       TPSPECIES => 452, # Drapion
@@ -271,6 +271,46 @@ $lcmal_trainers['Kalypsa Kapsyla'] = {
   :items => [
     221, # Full Restore
 	221  # Full Restore
+  ]
+}
+$lcmal_trainers['Malerin'] = {
+  :party => [
+    {
+      TPSPECIES => 235,
+      TPLEVEL => 100,
+	  TPITEM => 114,
+      TPMOVE1 => 410
+    },
+    {
+      TPSPECIES => 235,
+      TPLEVEL => 100,
+	  TPITEM => 114,
+      TPMOVE1 => 410
+    },
+    {
+      TPSPECIES => 235,
+      TPLEVEL => 100,
+	  TPITEM => 114,
+      TPMOVE1 => 410
+    },
+    {
+      TPSPECIES => 235,
+      TPLEVEL => 100,
+	  TPITEM => 114,
+      TPMOVE1 => 410
+    },
+    {
+      TPSPECIES => 235,
+      TPLEVEL => 100,
+	  TPITEM => 114,
+      TPMOVE1 => 410
+    },
+    {
+      TPSPECIES => 235,
+      TPLEVEL => 100,
+	  TPITEM => 114,
+      TPMOVE1 => 410
+    }
   ]
 }
 
