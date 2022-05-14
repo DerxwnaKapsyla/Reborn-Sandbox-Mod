@@ -11,6 +11,7 @@ It works slightly differently from before. Initially, I had an NPC in the Grand 
 
 # Features
  - (Almost) Every item is purchasable from an NPC.
+ - A Nurse
  - A Sketch Setup Trainer
  - An EV Grinding Trainer
  - An IV manipulating NPC
