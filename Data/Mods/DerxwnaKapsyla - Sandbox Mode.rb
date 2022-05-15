@@ -191,7 +191,6 @@ $lcmal_trainerClasses['WANDERER']={
   :winBGM => "Victory2",
   :sprites => {
     :fullFigure => 'Data/Mods/libCommonModAssets/Sandbox_trainerXXX_Kalypsa.png',
-    :overworld => 'Data/Mods/libCommonModAssets/Sandbox_trcharXXX_Kalypsa.png',
     :vsBar => 'Data/Mods/libCommonModAssets/Sandbox_vsBarXXX_Kalypsa.png',
     :vsTrainer => 'Data/Mods/libCommonModAssets/Sandbox_vsTrainerXXX_Kalypsa.png'
   }
