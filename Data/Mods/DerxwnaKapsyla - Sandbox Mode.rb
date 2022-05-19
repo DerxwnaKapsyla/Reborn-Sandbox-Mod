@@ -362,9 +362,24 @@ def Sandbox_TransferPlayer(iX, iY)
   $game_temp.player_new_direction = $game_player.direction
 end
 
+# Geneticist
+def Sandbox_EditPokemon
+  Kernel.pbMessage(_INTL('Hey, listen, I have the ability to modify your pokemon.'))
+  Kernel.pbMessage(_INTL("Yo, I'm serious! Lemme show you!"))
+  pbFadeOutIn(99999){
+    scene=PokemonScreen_Scene.new
+    screen=PokemonScreen.new(scene,$Trainer.party)
+    screen.pbStartScene(_INTL("Choose a Pokémon."),false)
+    chosen=screen.pbChoosePokemon
+    screen.pbPokemonDebug($Trainer.party[chosen], chosen) if chosen >= 0
+    screen.pbEndScene
+  }
+  Kernel.pbMessage(_INTL('Smell ya later!'))
+end
+
 # Pokemon creation
 def Sandbox_CreatePokemon
-  return Kernel.pbMessage(_INTL('Oh, ok.')) if Kernel.pbMessage(_INTL('I have the ability to generate a specific Pokemon for you.\r\nWould you like me to do this?'), [_INTL('Yes'), _INTL('No')], 1) != 0
+  return Kernel.pbMessage(_INTL('Oh, ok.')) if Kernel.pbMessage(_INTL('I have the ability to generate a specific Pokemon for you.\r\nWould you like me to do this?'), [_INTL('Yes'), _INTL('No')], 2) != 0
   species=Sandbox_chooseSpecies()
   return nil if species == nil
   speciesName=PBSpecies.getName(species)
@@ -505,16 +520,17 @@ def Sandbox_chooseSpecies
       Kernel.pbMessage(_INTL("Sorry, couldn't find any {1}.", nameIn))
       return nil
     elsif found.length > 1
-      names=[]
+      names=['< Cancel >']
       for i in 0...found.length
         names.push(found[i][1])
       end
       i=Kernel.pbMessage(
         _INTL('Found {1} species', found.length),
         names,
-        0 # 0 here prevents exiting without making a choice
+        1 # 0 here prevents exiting without making a choice
       )
-      return found[i][0]
+      return nil if i==0
+      return found[i-1][0]
     else
       return found[0][0]
     end
