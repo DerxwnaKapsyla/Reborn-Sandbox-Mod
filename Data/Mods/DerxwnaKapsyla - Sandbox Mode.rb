@@ -371,10 +371,633 @@ def Sandbox_EditPokemon
     screen=PokemonScreen.new(scene,$Trainer.party)
     screen.pbStartScene(_INTL("Choose a Pokémon."),false)
     chosen=screen.pbChoosePokemon
-    screen.pbPokemonDebug($Trainer.party[chosen], chosen) if chosen >= 0
+    screen.Sandbox_pbPokemonDebug($Trainer.party[chosen], chosen) if chosen >= 0
     screen.pbEndScene
   }
   Kernel.pbMessage(_INTL('Smell ya later!'))
+end
+
+def Sandbox_pbPokemonDebug(pkmn,pkmnid)
+  main_commands={
+    _INTL("HP/Status") => 0,
+    _INTL("Level") => 1,
+    # _INTL("Species") => 2,
+    _INTL("Moves") => 3,
+    _INTL("Gender") => 4,
+    _INTL("Ability") => 5,
+    _INTL("Nature") => 6,
+    _INTL("Shininess") => 7,
+    # _INTL("Form") => 8,
+    _INTL("Happiness") => 9,
+    _INTL("EV/IV/pID") => 10,
+    _INTL("Pokérus") => 11,
+    _INTL("Ownership") => 12,
+    _INTL("Nickname") => 13,
+    _INTL("Poké Ball") => 14,
+    # _INTL("Ribbons") => 15,
+    _INTL("Egg") => 16,
+    # _INTL("Shadow Pokémon") => 17,
+    # _INTL("Duplicate") => 18,
+    # _INTL("Delete") => 19,
+    _INTL("Cancel") => 20
+  }
+  main_commands_keys=main_commands.keys
+  command=0
+  loop do
+    tmp=@scene.pbShowCommands(_INTL("Do what with {1}?",pkmn.name),main_commands_keys,main_commands_keys.length)
+    command=main_commands[main_commands_keys[tmp]]
+    case command
+      ### Cancel ###
+      when -1, 20
+        break
+      ### HP/Status ###
+      when 0
+        cmd=0
+        loop do
+          cmd=@scene.pbShowCommands(_INTL("Do what with {1}?",pkmn.name),[
+             _INTL("Set HP"),
+             _INTL("Status: Sleep"),
+             _INTL("Status: Poison"),
+             _INTL("Status: Burn"),
+             _INTL("Status: Paralysis"),
+             _INTL("Status: Frozen"),
+             _INTL("Fainted"),
+             _INTL("Heal")
+          ],cmd)
+          # Break
+          if cmd==-1
+            break
+          # Set HP
+          elsif cmd==0
+            params=ChooseNumberParams.new
+            params.setRange(0,pkmn.totalhp)
+            params.setDefaultValue(pkmn.hp)
+            newhp=Kernel.pbMessageChooseNumber(
+               _INTL("Set the Pokémon's HP (max. {1}).",pkmn.totalhp),params) { @scene.update }
+            if newhp!=pkmn.hp
+              pkmn.hp=newhp
+              pbDisplay(_INTL("{1}'s HP was set to {2}.",pkmn.name,pkmn.hp))
+              pbRefreshSingle(pkmnid)
+            end
+          # Set status
+          elsif cmd>=1 && cmd<=5
+            if pkmn.hp>0
+              pkmn.status=cmd
+              pkmn.statusCount=0
+              if pkmn.status==PBStatuses::SLEEP
+                params=ChooseNumberParams.new
+                params.setRange(0,9)
+                params.setDefaultValue(0)
+                sleep=Kernel.pbMessageChooseNumber(
+                   _INTL("Set the Pokémon's sleep count."),params) { @scene.update }
+                pkmn.statusCount=sleep
+              end
+              pbDisplay(_INTL("{1}'s status was changed.",pkmn.name))
+              pbRefreshSingle(pkmnid)
+            else
+              pbDisplay(_INTL("{1}'s status could not be changed.",pkmn.name))
+            end
+          # Faint
+          elsif cmd==6
+            pkmn.hp=0
+            pbDisplay(_INTL("{1}'s HP was set to 0.",pkmn.name))
+            pbRefreshSingle(pkmnid)
+          # Heal
+          elsif cmd==7
+            pkmn.heal
+            pbDisplay(_INTL("{1} was fully healed.",pkmn.name))
+            pbRefreshSingle(pkmnid)
+          end
+        end
+      ### Level ###
+      when 1
+        params=ChooseNumberParams.new
+        params.setRange(1,PBExperience::MAXLEVEL)
+        params.setDefaultValue(pkmn.level)
+        level=Kernel.pbMessageChooseNumber(
+           _INTL("Set the Pokémon's level (max. {1}).",PBExperience::MAXLEVEL),params) { @scene.update }
+        if level!=pkmn.level
+          pkmn.level=level
+          pkmn.calcStats
+          pkmn.poklevel = level
+          pbDisplay(_INTL("{1}'s level was set to {2}.",pkmn.name,pkmn.level))
+          pbRefreshSingle(pkmnid)
+        end
+      ### Species ###
+      when 2
+        species=pbChooseSpecies(pkmn.species)
+        if species!=0
+          oldspeciesname=PBSpecies.getName(pkmn.species)
+          pkmn.species=species
+          pkmn.calcStats
+          pkmn.exp=PBExperience.pbGetStartExperience(pkmn.level,pkmn.growthrate)
+          oldname=pkmn.name
+          pkmn.name=PBSpecies.getName(pkmn.species) if pkmn.name==oldspeciesname
+          pbDisplay(_INTL("{1}'s species was changed to {2}.",oldname,PBSpecies.getName(pkmn.species)))
+          pbSeenForm(pkmn)
+          pbRefreshSingle(pkmnid)
+        end
+      ### Moves ###
+      when 3
+        cmd=0
+        loop do
+          cmd=@scene.pbShowCommands(_INTL("Do what with {1}?",pkmn.name),[
+             _INTL("Teach move"),
+             _INTL("Forget move"),
+             _INTL("Reset movelist"),
+             _INTL("Reset initial moves")],cmd)
+          # Break
+          if cmd==-1
+            break
+          # Teach move
+          elsif cmd==0
+            move=pbChooseMoveList
+            if move!=0
+              pbLearnMove(pkmn,move)
+              pbRefreshSingle(pkmnid)
+            end
+          # Forget move
+          elsif cmd==1
+            move=pbChooseMove(pkmn,_INTL("Choose move to forget."))
+            if move>=0
+              movename=PBMoves.getName(pkmn.moves[move].id)
+              pbDeleteMove(pkmn,move)
+              pbDisplay(_INTL("{1} forgot {2}.",pkmn.name,movename))
+              pbRefreshSingle(pkmnid)
+            end
+          # Reset movelist
+          elsif cmd==2
+            pkmn.resetMoves
+            pbDisplay(_INTL("{1}'s moves were reset.",pkmn.name))
+            pbRefreshSingle(pkmnid)
+          # Reset initial moves
+          elsif cmd==3
+            pkmn.pbRecordFirstMoves
+            pbDisplay(_INTL("{1}'s moves were set as its first-known moves.",pkmn.name))
+            pbRefreshSingle(pkmnid)
+          end
+        end
+      ### Gender ###
+      when 4
+        if pkmn.gender==2
+          pbDisplay(_INTL("{1} is genderless.",pkmn.name))
+        else
+          cmd=0
+          loop do
+            oldgender=(pkmn.isMale?) ? _INTL("male") : _INTL("female")
+            msg=[_INTL("Gender {1} is natural.",oldgender),
+                 _INTL("Gender {1} is being forced.",oldgender)][pkmn.genderflag ? 1 : 0]
+            cmd=@scene.pbShowCommands(msg,[
+               _INTL("Make male"),
+               _INTL("Make female"),
+               _INTL("Remove override")],cmd)
+            # Break
+            if cmd==-1
+              break
+            # Make male
+            elsif cmd==0
+              pkmn.setGender(0)
+              if pkmn.isMale?
+                pbDisplay(_INTL("{1} is now male.",pkmn.name))
+              else
+                pbDisplay(_INTL("{1}'s gender couldn't be changed.",pkmn.name))
+              end
+            # Make female
+            elsif cmd==1
+              pkmn.setGender(1)
+              if pkmn.isFemale?
+                pbDisplay(_INTL("{1} is now female.",pkmn.name))
+              else
+                pbDisplay(_INTL("{1}'s gender couldn't be changed.",pkmn.name))
+              end
+            # Remove override
+            elsif cmd==2
+              pkmn.genderflag=nil
+              pbDisplay(_INTL("Gender override removed."))
+            end
+            pbSeenForm(pkmn)
+            pbRefreshSingle(pkmnid)
+          end
+        end
+      ### Ability ###
+      when 5
+        cmd=0
+        loop do
+          abils=pkmn.getAbilityList
+          oldabil=PBAbilities.getName(pkmn.ability)
+          commands=[]
+          for i in abils.keys
+            commands.push(( i < 2 ? "" : "(H) ")+PBAbilities.getName(abils[i]))
+          end
+          commands.push(_INTL("Remove override"))
+          msg=[_INTL("Ability {1} is natural.",oldabil),
+               _INTL("Ability {1} is being forced.",oldabil)][pkmn.abilityflag ? 1 : 0]
+          cmd=@scene.pbShowCommands(msg,commands,cmd)
+          # Break
+          if cmd==-1
+            break
+          # Set ability override
+          elsif cmd>=0 && cmd<abils.length
+            pkmn.setAbility(cmd)
+          # Remove override
+          elsif cmd==abils.length
+            pkmn.abilityflag=nil
+          end
+          pbRefreshSingle(pkmnid)
+        end
+      ### Nature ###
+      when 6
+        cmd=0
+        loop do
+          oldnature=PBNatures.getName(pkmn.nature)
+          commands=[]
+          (PBNatures.getCount).times do |i|
+            commands.push(PBNatures.getName(i))
+          end
+          commands.push(_INTL("Remove override"))
+          msg=[_INTL("Nature {1} is natural.",oldnature),
+               _INTL("Nature {1} is being forced.",oldnature)][pkmn.natureflag ? 1 : 0]
+          cmd=@scene.pbShowCommands(msg,commands,cmd)
+          # Break
+          if cmd==-1
+            break
+          # Set nature override
+          elsif cmd>=0 && cmd<PBNatures.getCount
+            pkmn.setNature(cmd)
+            pkmn.calcStats
+          # Remove override
+          elsif cmd==PBNatures.getCount
+            pkmn.natureflag=nil
+          end
+          pbRefreshSingle(pkmnid)
+        end
+      ### Shininess ###
+      when 7
+        cmd=0
+        loop do
+          oldshiny=(pkmn.isShiny?) ? _INTL("shiny") : _INTL("normal")
+          msg=[_INTL("Shininess ({1}) is natural.",oldshiny),
+               _INTL("Shininess ({1}) is being forced.",oldshiny)][pkmn.shinyflag!=nil ? 1 : 0]
+          cmd=@scene.pbShowCommands(msg,[
+               _INTL("Make shiny"),
+               _INTL("Make normal"),
+               _INTL("Remove override")],cmd)
+          # Break
+          if cmd==-1
+            break
+          # Make shiny
+          elsif cmd==0
+            pkmn.makeShiny
+          # Make normal
+          elsif cmd==1
+            pkmn.makeNotShiny
+          # Remove override
+          elsif cmd==2
+            pkmn.shinyflag=nil
+          end
+          pbRefreshSingle(pkmnid)
+        end
+      ### Form ###
+      when 8
+        params=ChooseNumberParams.new
+        params.setRange(0,100)
+        params.setDefaultValue(pkmn.form)
+        f=Kernel.pbMessageChooseNumber(
+           _INTL("Set the Pokémon's form."),params) { @scene.update }
+        if f!=pkmn.form
+          pkmn.form=f
+          pbDisplay(_INTL("{1}'s form was set to {2}.",pkmn.name,pkmn.form))
+          pbSeenForm(pkmn)
+          pbRefreshSingle(pkmnid)
+        end
+      ### Happiness ###
+      when 9
+        params=ChooseNumberParams.new
+        params.setRange(0,255)
+        params.setDefaultValue(pkmn.happiness)
+        h=Kernel.pbMessageChooseNumber(
+           _INTL("Set the Pokémon's happiness (max. 255)."),params) { @scene.update }
+        if h!=pkmn.happiness
+          pkmn.happiness=h
+          pbDisplay(_INTL("{1}'s happiness was set to {2}.",pkmn.name,pkmn.happiness))
+          pbRefreshSingle(pkmnid)
+        end
+      ### EV/IV/pID ###
+      when 10
+        stats=STATSTRINGS
+        cmd=0
+        loop do
+          persid=sprintf("0x%08X",pkmn.personalID)
+          cmd=@scene.pbShowCommands(_INTL("Personal ID is {1}.",persid),[
+             _INTL("Set EVs"),
+             _INTL("Set IVs"),
+             _INTL("Randomise pID")],cmd)
+          case cmd
+            # Break
+            when -1
+              break
+            # Set EVs
+            when 0
+              cmd2=0
+              loop do
+                evcommands=[]
+                for i in 0...stats.length
+                  evcommands.push(stats[i]+" (#{pkmn.ev[i]})")
+                end
+                cmd2=@scene.pbShowCommands(_INTL("Change which EV?"),evcommands,cmd2)
+                if cmd2==-1
+                  break
+                elsif cmd2>=0 && cmd2<stats.length
+                  params=ChooseNumberParams.new
+                  params.setRange(0,255)
+                  params.setDefaultValue(pkmn.ev[cmd2])
+                  params.setCancelValue(pkmn.ev[cmd2])
+                  f=Kernel.pbMessageChooseNumber(
+                     _INTL("Set the EV for {1} (max. 255).",stats[cmd2]),params) { @scene.update }
+                  pkmn.ev[cmd2]=f
+                  pkmn.totalhp
+                  pkmn.calcStats
+                  pbRefreshSingle(pkmnid)
+                end
+              end
+            # Set IVs
+            when 1
+              cmd2=0
+              loop do
+                hiddenpower=pbHiddenPower(pkmn)
+                msg=_INTL("Hidden Power:\n{1}",PBTypes.getName(hiddenpower))
+                ivcommands=[]
+                for i in 0...stats.length
+                  ivcommands.push(stats[i]+" (#{pkmn.iv[i]})")
+                end
+                ivcommands.push(_INTL("Randomise all"))
+                cmd2=@scene.pbShowCommands(msg,ivcommands,cmd2)
+                if cmd2==-1
+                  break
+                elsif cmd2>=0 && cmd2<stats.length
+                  params=ChooseNumberParams.new
+                  params.setRange(0,31)
+                  params.setDefaultValue(pkmn.iv[cmd2])
+                  params.setCancelValue(pkmn.iv[cmd2])
+                  f=Kernel.pbMessageChooseNumber(
+                     _INTL("Set the IV for {1} (max. 31).",stats[cmd2]),params) { @scene.update }
+                  pkmn.iv[cmd2]=f
+                  pkmn.calcStats
+                  pbRefreshSingle(pkmnid)
+                elsif cmd2==ivcommands.length-1
+                  pkmn.iv[0]=rand(32)
+                  pkmn.iv[1]=rand(32)
+                  pkmn.iv[2]=rand(32)
+                  pkmn.iv[3]=rand(32)
+                  pkmn.iv[4]=rand(32)
+                  pkmn.iv[5]=rand(32)
+                  pkmn.calcStats
+                  pbRefreshSingle(pkmnid)
+                end
+              end
+            # Randomise pID
+            when 2
+              pkmn.personalID=rand(256)
+              pkmn.personalID|=rand(256)<<8
+              pkmn.personalID|=rand(256)<<16
+              pkmn.personalID|=rand(256)<<24
+              pkmn.calcStats
+              pbRefreshSingle(pkmnid)
+          end
+        end
+      ### Pokérus ###
+      when 11
+        cmd=0
+        loop do
+          pokerus=(pkmn.pokerus) ? pkmn.pokerus : 0
+          msg=[_INTL("{1} doesn't have Pokérus.",pkmn.name),
+               _INTL("Has strain {1}, infectious for {2} more days.",pokerus/16,pokerus%16),
+               _INTL("Has strain {1}, not infectious.",pokerus/16)][pkmn.pokerusStage]
+          cmd=@scene.pbShowCommands(msg,[
+               _INTL("Give random strain"),
+               _INTL("Make not infectious"),
+               _INTL("Clear Pokérus")],cmd)
+          # Break
+          if cmd==-1
+            break
+          # Give random strain
+          elsif cmd==0
+            pkmn.givePokerus
+          # Make not infectious
+          elsif cmd==1
+            strain=pokerus/16
+            p=strain<<4
+            pkmn.pokerus=p
+          # Clear Pokérus
+          elsif cmd==2
+            pkmn.pokerus=0
+          end
+        end
+      ### Ownership ###
+      when 12
+        cmd=0
+        loop do
+          gender=[_INTL("Male"),_INTL("Female"),_INTL("Unknown")][pkmn.otgender]
+          msg=[_INTL("Player's Pokémon\n{1}\n{2}\n{3} ({4})",pkmn.ot,gender,pkmn.publicID,pkmn.trainerID),
+               _INTL("Foreign Pokémon\n{1}\n{2}\n{3} ({4})",pkmn.ot,gender,pkmn.publicID,pkmn.trainerID)
+              ][pkmn.isForeign?($Trainer) ? 1 : 0]
+          cmd=@scene.pbShowCommands(msg,[
+               _INTL("Make player's"),
+               _INTL("Set OT's name"),
+               _INTL("Set OT's gender"),
+               _INTL("Random foreign ID"),
+               _INTL("Set foreign ID")],cmd)
+          # Break
+          if cmd==-1
+            break
+          # Make player's
+          elsif cmd==0
+            pkmn.trainerID=$Trainer.id
+            pkmn.ot=$Trainer.name
+            pkmn.otgender=$Trainer.gender
+          # Set OT's name
+          elsif cmd==1
+            newot=pbEnterPlayerName(_INTL("{1}'s OT's name?",pkmn.name),1,12)
+            pkmn.ot=newot
+          # Set OT's gender
+          elsif cmd==2
+            cmd2=@scene.pbShowCommands(_INTL("Set OT's gender."),
+               [_INTL("Male"),_INTL("Female"),_INTL("Unknown")])
+            pkmn.otgender=cmd2 if cmd2>=0
+          # Random foreign ID
+          elsif cmd==3
+            pkmn.trainerID=$Trainer.getForeignID
+          # Set foreign ID
+          elsif cmd==4
+            params=ChooseNumberParams.new
+            params.setRange(0,65535)
+            params.setDefaultValue(pkmn.publicID)
+            val=Kernel.pbMessageChooseNumber(
+               _INTL("Set the new ID (max. 65535)."),params) { @scene.update }
+            pkmn.trainerID=val
+            pkmn.trainerID|=val<<16
+          end
+        end
+      ### Nickname ###
+      when 13
+        cmd=0
+        loop do
+          speciesname=PBSpecies.getName(pkmn.species)
+          msg=[_INTL("{1} has the nickname {2}.",speciesname,pkmn.name),
+               _INTL("{1} has no nickname.",speciesname)][pkmn.name==speciesname ? 1 : 0]
+          cmd=@scene.pbShowCommands(msg,[
+               _INTL("Rename"),
+               _INTL("Erase name")],cmd)
+          # Break
+          if cmd==-1
+            break
+          # Rename
+          elsif cmd==0
+            newname=pbEnterPokemonName(_INTL("{1}'s nickname?",speciesname),0,12,"",pkmn)
+            pkmn.name=(newname=="") ? speciesname : newname
+            pbRefreshSingle(pkmnid)
+          # Erase name
+          elsif cmd==1
+            pkmn.name=speciesname
+          end
+        end
+      ### Poké Ball ###
+      when 14
+        cmd=0
+        loop do
+          oldball=PBItems.getName(pbBallTypeToBall(pkmn.ballused))
+          commands=[]; balls=[]
+          for key in $BallTypes.keys
+            item=getID(PBItems,$BallTypes[key])
+            balls.push([key,PBItems.getName(item)]) if item && item>0
+          end
+          balls.sort! {|a,b| a[1]<=>b[1]}
+          for i in 0...commands.length
+            cmd=i if pkmn.ballused==balls[i][0]
+          end
+          for i in balls
+            commands.push(i[1])
+          end
+          cmd=@scene.pbShowCommands(_INTL("{1} used.",oldball),commands,cmd)
+          if cmd==-1
+            break
+          else
+            pkmn.ballused=balls[cmd][0]
+          end
+        end
+      ### Ribbons ###
+      when 15
+        cmd=0
+        loop do
+          commands=[]
+          for i in 1..PBRibbons.maxValue
+            commands.push(_INTL("{1} {2}",
+               pkmn.hasRibbon?(i) ? "[X]" : "[  ]",PBRibbons.getName(i)))
+          end
+          cmd=@scene.pbShowCommands(_INTL("{1} ribbons.",pkmn.ribbonCount),commands,cmd)
+          if cmd==-1
+            break
+          elsif cmd>=0 && cmd<commands.length
+            if pkmn.hasRibbon?(cmd+1)
+              pkmn.takeRibbon(cmd+1)
+            else
+              pkmn.giveRibbon(cmd+1)
+            end
+          end
+        end
+      ### Egg ###
+      when 16
+        cmd=0
+        loop do
+          msg=[_INTL("Not an egg"),
+               _INTL("Egg with eggsteps: {1}.",pkmn.eggsteps)][pkmn.isEgg? ? 1 : 0]
+          cmd=@scene.pbShowCommands(msg,[
+               _INTL("Make egg"),
+               _INTL("Make Pokémon"),
+               _INTL("Set eggsteps to 1")],cmd)
+          # Break
+          if cmd==-1
+            break
+          # Make egg
+          elsif cmd==0
+            if pbHasEgg?(pkmn.species) ||
+               pbConfirm(_INTL("{1} cannot be an egg. Make egg anyway?",PBSpecies.getName(pkmn.species)))
+              pkmn.level=EGGINITIALLEVEL
+              pkmn.calcStats
+              pkmn.name=_INTL("Egg")
+              pkmn.eggsteps=$cache.pkmn_dex[pkmn.species][:EggSteps]
+              pkmn.hatchedMap=0
+              pkmn.obtainMode=1
+              pbRefreshSingle(pkmnid)
+            end
+          # Make Pokémon
+          elsif cmd==1
+            pkmn.name=PBSpecies.getName(pkmn.species)
+            pkmn.eggsteps=0
+            pkmn.hatchedMap=0
+            pkmn.obtainMode=0
+            pbRefreshSingle(pkmnid)
+          # Set eggsteps to 1
+          elsif cmd==2
+            pkmn.eggsteps=1 if pkmn.eggsteps>0
+          end
+        end
+      ### Shadow Pokémon ###
+      when 17
+        cmd=0
+        loop do
+          msg=[_INTL("Not a Shadow Pokémon."),
+               _INTL("Heart gauge is {1}.",pkmn.heartgauge)][(pkmn.isShadow? rescue false) ? 1 : 0]
+          cmd=@scene.pbShowCommands(msg,[
+             _INTL("Make Shadow"),
+             _INTL("Lower heart gauge")],cmd)
+          # Break
+          if cmd==-1
+            break
+          # Make Shadow
+          elsif cmd==0
+            if !(pkmn.isShadow? rescue false) && pkmn.respond_to?("makeShadow")
+              pkmn.makeShadow
+              pbDisplay(_INTL("{1} is now a Shadow Pokémon.",pkmn.name))
+              pbRefreshSingle(pkmnid)
+            else
+              pbDisplay(_INTL("{1} is already a Shadow Pokémon.",pkmn.name))
+            end
+          # Lower heart gauge
+          elsif cmd==1
+            if (pkmn.isShadow? rescue false)
+              prev=pkmn.heartgauge
+              pkmn.adjustHeart(-700)
+              Kernel.pbMessage(_INTL("{1}'s heart gauge was lowered from {2} to {3} (now stage {4}).",
+                 pkmn.name,prev,pkmn.heartgauge,pkmn.heartStage))
+              pbReadyToPurify(pkmn)
+            else
+              Kernel.pbMessage(_INTL("{1} is not a Shadow Pokémon.",pkmn.name))
+            end
+          end
+        end
+      ### Duplicate ###
+      when 18
+        if pbConfirm(_INTL("Are you sure you want to copy this Pokémon?"))
+          clonedpkmn=pkmn.clone
+          clonedpkmn.iv=pkmn.iv.clone
+          clonedpkmn.ev=pkmn.ev.clone
+          pbStorePokemon(clonedpkmn)
+          pbHardRefresh
+          pbDisplay(_INTL("The Pokémon was duplicated."))
+          break
+        end
+      ### Delete ###
+      when 19
+        if pbConfirm(_INTL("Are you sure you want to delete this Pokémon?"))
+          @party[pkmnid]=nil
+          @party.compact!
+          pbHardRefresh
+          pbDisplay(_INTL("The Pokémon was deleted."))
+          break
+        end
+    end
+  end
 end
 
 # Pokemon creation
