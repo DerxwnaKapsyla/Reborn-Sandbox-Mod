@@ -17,6 +17,7 @@
 ###   :winBGM => "Victory2",
 ###   :sprites => {
 ###     :fullFigure => 'Data/Mods/libCommonModAssets/trainer400.png',
+###     :overworld => 'Data/Mods/libCommonModAssets/trchar400.png',
 ###     :vsBar => 'Data/Mods/libCommonModAssets/vsBar400.png',
 ###     :vsTrainer => 'Data/Mods/libCommonModAssets/vsTrainer400.png'
 ###   }
@@ -145,7 +146,7 @@ def lcmal_updateTrainerClassSprites(newVal, spritesData)
   lcmal_replace_file(spritesData[:vsBar], sprintf('Graphics/Transitions/vsBar%d',newVal))
   lcmal_replace_file(spritesData[:vsTrainer], sprintf('Graphics/Transitions/vsTrainer%d',newVal))
   lcmal_replace_file(spritesData[:fullFigure], sprintf('Graphics/Characters/trainer%d',newVal))
-  # lcmal_replace_file(spritesData[:overworld], sprintf('Graphics/Characters/trchar%d',newVal))
+  lcmal_replace_file(spritesData[:overworld], sprintf('Graphics/Characters/trchar%d',newVal))
 end
 
 def lcmal_replace_file(src, dest)
