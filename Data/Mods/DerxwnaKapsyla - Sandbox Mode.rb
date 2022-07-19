@@ -379,10 +379,10 @@ end
 
 def Sandbox_pbPokemonDebug(pkmn,pkmnid)
   main_commands={
-    _INTL("HP/Status") => 0,
-    _INTL("Level") => 1,
+    #_INTL("HP/Status") => 0,
+    #_INTL("Level") => 1,
     # _INTL("Species") => 2,
-    _INTL("Moves") => 3,
+    #_INTL("Moves") => 3,
     _INTL("Gender") => 4,
     _INTL("Ability") => 5,
     _INTL("Nature") => 6,
@@ -391,11 +391,11 @@ def Sandbox_pbPokemonDebug(pkmn,pkmnid)
     _INTL("Happiness") => 9,
     _INTL("EV/IV/pID") => 10,
     _INTL("Pokérus") => 11,
-    _INTL("Ownership") => 12,
+    #_INTL("Ownership") => 12,
     _INTL("Nickname") => 13,
     _INTL("Poké Ball") => 14,
     # _INTL("Ribbons") => 15,
-    _INTL("Egg") => 16,
+    #_INTL("Egg") => 16,
     # _INTL("Shadow Pokémon") => 17,
     # _INTL("Duplicate") => 18,
     # _INTL("Delete") => 19,
